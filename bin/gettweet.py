@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',  
                     datefmt='%a, %d %b %Y %H:%M:%S') 
 
+# Read configuration and return the conf
 def getConfFromFile(conf_file_name):
     try:
         conf_file = open(conf_file_name,'r')
@@ -23,6 +24,7 @@ def getConfFromFile(conf_file_name):
     conf_file.close()
     return conf
 
+# Get value by key
 def getConf(conf,section,key):
     if conf == False:
         logging.warning("Warning: Invalid configuration!")
@@ -30,6 +32,7 @@ def getConf(conf,section,key):
 
     return conf[section][key]
 
+# Get tweet of specific user 
 def getNewTweet():
     conf = getConfFromFile("../conf/twitter.yaml")
     if conf == None:
@@ -45,17 +48,21 @@ def getNewTweet():
 
     twitter = Twython(CONSUMER_KEY,CONSUMER_SECRET,ACCESS_TOKEN,ACCESS_SECRET)
     screen_name = getConf(conf,"target","screen_name")
+
+    #Get latest tweet 
     user_tweets = twitter.get_user_timeline(screen_name=screen_name,count=1)
     if len(user_tweets) == 0:
         logging.info("Info: Got no tweet from timeline.")
         return ""
 
+    # twitter.get_user_timeline returns a truncated tweet, we need the untruncated one
     tweet = user_tweets[0]
     tweet = twitter.show_status(id=tweet['id_str'],tweet_mode='extended')
     if tweet == False:
         logging.info("Info: Got no tweet after show_status.")
         return ""
     
+    # Search keyword in full tweet
     fulltext = tweet['full_text'].encode('utf-8')
     lower_fulltext = fulltext.lower()
     logging.debug("Debug: Tweet is: %s." % (fulltext))
